@@ -20,7 +20,7 @@ def on_message(client, userdata, msg):
     #print(json.dumps(result, sort_keys=True, indent=4, separators=(',', ': ')))
 
     host    = result.get('hostname')
-    check   = result.get('epoch')
+    check   = result.get('timestamp')
 
     if msg.topic.startswith( 'host' ):
         onemin  = result.get('loadavg').get('1min')

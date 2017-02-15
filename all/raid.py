@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
                 report = {
                     'hostname': hostname,
-                    'epoch': epoch,
+                    'timestamp': epoch,
                     'raid': raidstatus
                 }
 

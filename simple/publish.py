@@ -11,13 +11,20 @@ import paho.mqtt.client as mqtt
 def get_load_average():
     try:
         raw_average = os.getloadavg()
-        load_average = {
-                    '1min': raw_average[0], 
-                    '5min': raw_average[1], 
-                    '15min': raw_average[2]
-                    }
+        load_average = { '1min': raw_average[0], '5min': raw_average[1], '15min': raw_average[2] }
+
         return load_average
 
+    except:
+        return None
+
+def get_cpu_percent():
+    try:
+        raw_percent = psutil.cpu_times_percent(interval=1, percpu=False)
+        cpu_percent = round(100 - raw_percent.idle, 1)
+
+        return cpu_percent
+ 
     except:
         return None
 
@@ -25,60 +32,19 @@ def get_load_average():
 def get_virtual_memory():
     try:
         raw_vmem = psutil.virtual_memory()
-        vmem_usage = {
-                    'total': raw_vmem.total,
-                    'available': raw_vmem.available,
-                    'percent': raw_vmem.percent,
-                    'used': raw_vmem.used,
-                    'free': raw_vmem.free,
-                    'active': raw_vmem.active,
-                    'inactive': raw_vmem.inactive,
-                    'buffers': raw_vmem.buffers,
-                    'cached': raw_vmem.cached,
-                    'shared': raw_vmem.shared
-                }
-
+        vmem_usage = raw_vmem.percent
     
         return vmem_usage
 
     except:
         return None
 
-def get_swap_memory():
-    try:
-        raw_swap = psutil.swap_memory()
-        swap_usage = {
-                    'total': raw_swap.total,
-                    'used': raw_swap.used,
-                    'free': raw_swap.free,
-                    'percent': raw_swap.percent,
-                    'sin': raw_swap.sin,
-                    'sout': raw_swap.sout
-                }
-
-        return swap_usage
-
-    except:
-        return None
-
 def get_disk_usage():
     try:
-        disk = {}
-        for part in psutil.disk_partitions(all=False):
-            if os.name == 'nt':
-                if 'cdrom' in part.opts or part.fstype == '':
-                    continue
-            raw_usage = psutil.disk_usage(part.mountpoint)
-            usage = {
-                    'total': raw_usage.total,
-                    'used': raw_usage.used,
-                    'free': raw_usage.free,
-                    'percent': raw_usage.percent
-                }
+        raw_disk = psutil.disk_usage('/')
+        disk_usage = raw_disk.percent
 
-            disk[part.mountpoint] = usage
-
-        return disk
+        return disk_usage
 
     except:
         return None
@@ -99,14 +65,16 @@ def get_process_list():
     except:
         return None
 
-
-
 def on_connect(client, userdata, flags, rc):
     print ("Connected with result code "+str(rc))
 
 
 
 if __name__ == "__main__":
+
+    ipaddress = '10.10.10.10'
+
+    assert (len(ipaddress)) > 0, 'configure private address'
 
     client = mqtt.Client()
     client.on_connect = on_connect    
@@ -122,23 +90,24 @@ if __name__ == "__main__":
                 hostname = socket.gethostname()
                 
                 loadavg = get_load_average()
+                cpu = get_cpu_percent()
                 vmem = get_virtual_memory()
-                swap = get_swap_memory()
                 disk = get_disk_usage()
                 plist = get_process_list()
                 
                 report = {
                     'hostname': hostname,
-                    'epoch': epoch,
+                    'ip': ipaddress,
+                    'timestamp': epoch,
                     'loadavg': loadavg,
+                    'cpu': cpu,
                     'vmem': vmem,
-                    'swap': swap,
                     'disk': disk,
                     'plist': plist
                     }
                 
                 
-                #print(json.dumps(report, sort_keys=True, indent=4, separators=(',', ': ')))
+                print(json.dumps(report, sort_keys=True, indent=4, separators=(',', ': ')))
     
                 client.publish("host/" + hostname, json.dumps(report), 0, True)
                 
@@ -154,4 +123,5 @@ if __name__ == "__main__":
  
     except KeyboardInterrupt:
         sys.exit(1)
+
 
