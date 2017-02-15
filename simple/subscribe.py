@@ -19,16 +19,16 @@ def on_message(client, userdata, msg):
     result = json.loads(msg.payload.decode("utf-8"))
     #print(json.dumps(result, sort_keys=True, indent=4, separators=(',', ': ')))
 
-    host    = result.get('hostname')
+    ip    = result.get('ipaddress')
     check   = result.get('timestamp')
 
     if msg.topic.startswith( 'host' ):
         onemin  = result.get('loadavg').get('1min')
-        print("%s\t%s\t%s" % (host, check, onemin))
+        print("%s\t%s\t%s" % (ip, check, onemin))
 
     if msg.topic.startswith( 'raid' ):
         physical_status = result.get('raid').get('physical_status')
-        print("%s\t%s\t%s" % (host, check, physical_status))
+        print("%s\t%s\t%s" % (ip, check, physical_status))
 
 
 if __name__ == "__main__":
@@ -38,11 +38,9 @@ if __name__ == "__main__":
     client.on_message = on_message
     
     client.connect('127.0.0.1', 1883, 10)
-    client.loop_start()
     
     try:
-        while True:
-            time.sleep(0.1)
+        client.loop_forever()
     
     except KeyboardInterrupt:
         sys.exit(1)

@@ -108,7 +108,7 @@ if __name__ == "__main__":
                 }
 
                 print(json.dumps(report, sort_keys=True, indent=4, separators=(',', ': ')))
-                client.publish("raid/" + hostname, json.dumps(report), 0, True)
+                client.publish("raidtest/" + ipaddress, json.dumps(report), 0, True)
 
                 time.sleep(1)
 
