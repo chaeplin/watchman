@@ -10,8 +10,32 @@ import socket
 import json
 import requests
 import paho.mqtt.client as mqtt
+import threading
 
 webhook_url = 'https://hooks.slack.com/services/xxx/xxx/xxx'
+
+class threading_sendslack(threading.Thread):
+
+    def __init__(self, msgtoslack, evtime):
+        threading.Thread.__init__(self)
+        self.msgtoslack = msgtoslack
+        self.evtime = evtime
+
+    def run(self):
+        slack_data = { "text": self.msgtoslack + ' - ' + str(self.evtime) }
+        print(slack_data)
+        try:
+            response = requests.post(webhook_url, data=json.dumps(slack_data), headers={'Content-Type': 'application/json'})
+            if response.status_code != 200:
+                print('slack post failed')
+
+        except:
+            pass
+
+def start_slackpost(msgtoslack, evtime):
+    spost = threading_sendslack(msgtoslack, evtime)
+    spost.start()
+
 
 def sendslack(msgtoslack, evtime):
     slack_data = { "text": msgtoslack + ' - ' + str(evtime) }
@@ -38,7 +62,8 @@ def on_message(client, userdata, msg):
     #    use redis to store last status of client to filter out same msg
         host_status = result.get('msg', None)
         if host_status == 'down' or host_status == 'up':
-            sendslack((result.get('hostname') + ' is ' + host_status), now())
+            start_slackpost((result.get('hostname') + ' is ' + host_status), now())
+            #sendslack((result.get('hostname') + ' is ' + host_status), now())
 
     except:
         pass
