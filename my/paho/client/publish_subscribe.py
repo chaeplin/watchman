@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# er3list --> python 2 and paho-mqtt
-
 # /etc/rc.local 
 # sleep 60 && su - pi -c "screen -dm -S mqtt /home/pi/mqtt/p.py"
 
